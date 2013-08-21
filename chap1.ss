@@ -1,5 +1,7 @@
 (load "utils.ss")
 
+(define env.init '())
+
 (define (evaluate e env)
   (if (atom? e)
     (cond (symbol? e) (lookup e env)
@@ -17,6 +19,33 @@
       (else (invoke (evaluate (car e) env)
                     (evlis (cdr e) env))))))
 
+(define (lookup id env)
+  (if (pair? env)
+    (if (eq? (caar env) id)
+      (cdar env)
+      (lookup id (cdr env)))
+    (wrong "No such binding" id)))
+
+(define (update! id env value)
+  (if (pair? env)
+    (if (eq? (caar env) id)
+      (begin (set-cdr! (car env) value)
+             value)
+      (update! id (cdr env) value))
+    (wrong "No such binding" id)))
+
+(define (extend env variables values)
+  (cond ((pair? variables)
+         (if (pair? values)
+           (cons (cons (car variables) (car values))
+                 (extend env (cdr variables) (cdr values)))
+           (wrong "Too few values"))
+         ((null? variables)
+          (if (null? values)
+            env
+            (wrong "Too many values")))
+         ((symbol? variables) (cons (cons variables values) env)))))
+         
 (define (eprogn exps env)
   (if (pair? exps)
     (if (pair? (cdr exps))
@@ -26,3 +55,13 @@
     empty-begin))
 
 (define empty-begin 813)
+
+(define (evlis args env)
+  (if (pair? args)
+    ; We originally did the following, but it did not make precise the order in
+    ; which arguments are evaluated.
+    ;(cons (evaluate (car args) env)
+    ;      (evlis (cdr args) env))
+    (let (argument1 (evaluate (car args) env))
+      (cons argument1 (evlis (cdr args) env)))
+    '()))
