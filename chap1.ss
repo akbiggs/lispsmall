@@ -60,8 +60,17 @@
   (if (pair? args)
     ; We originally did the following, but it did not make precise the order in
     ; which arguments are evaluated.
-    ;(cons (evaluate (car args) env)
-    ;      (evlis (cdr args) env))
+    ; (cons (evaluate (car args) env)
+    ;       (evlis (cdr args) env))
     (let (argument1 (evaluate (car args) env))
       (cons argument1 (evlis (cdr args) env)))
     '()))
+
+(define (invoke fn args)
+  (if (procedure? fn)
+    (fn args env)
+    (wrong "Not a function" fn)))
+
+(define (make-function variables body def.env)
+  (lambda (values cur.env)
+    (eprogn body (extend cur.env variables values))))
