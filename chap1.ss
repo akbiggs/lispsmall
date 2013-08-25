@@ -17,7 +17,8 @@
       ((set!) (update! (cadr e) env (evaluate (caddr e) env)))
       ((lambda) (make-function (cadr e) (cddr e) env))
       (else (invoke (evaluate (car e) env)
-                    (evlis (cdr e) env))))))
+                    (evlis (cdr e) env)
+                    env)))))
 
 (define (lookup id env)
   (if (pair? env)
@@ -66,7 +67,7 @@
       (cons argument1 (evlis (cdr args) env)))
     '()))
 
-(define (invoke fn args)
+(define (invoke fn args env)
   (if (procedure? fn)
     (fn args env)
     (wrong "Not a function" fn)))
